@@ -9,11 +9,22 @@ from langchain_openai import ChatOpenAI
 
 os.environ["OPENAI_API_KEY"] = secret.OPENAI_KEY
 logging.basicConfig(
-    filename="df_agent_errors.txt", encoding="utf-8", level=logging.warning
+    filename="df_agent_errors.txt", encoding="utf-8", level=logging.WARNING
 )
 
 
-class DataframeAnalysisAgent:
+class DataframeAnalysisAgent(object):
+    def __new__(cls, df, gpt4=True):
+        """
+        DataframeAnalysisAgent is a singleton class so that we can avoid recreating agents
+        Use load_new_df to make any changes to the df and agent
+        """
+        if not hasattr(cls, "instance"):
+            cls.instance = super(DataframeAnalysisAgent, cls).__new__(cls)
+            cls.instance.df = df
+            cls.instance.gpt4 = gpt4
+        return cls.instance
+
     def __init__(self, df, gpt4=True):
         self.df = df
         self.model = "gpt-4-0125-preview" if gpt4 else "gpt-3.5-turbo-1106"
