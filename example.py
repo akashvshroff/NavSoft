@@ -12,9 +12,14 @@ def read_data(is_parquet, filename="./data/BaseTable_v1.parquet"):
 
 def driver():
     df = read_data(True)
+    # df needs to be read in client side and then passed in to agent
+    # create analysis agent using dataframe - singleton class so only instantiates once, to change df use load_new_df
+    # TODO: might need to keep loading new dfs every time the forecast is regenerated - but probably a good idea to avoid agent creation time
     agent = DataframeAnalysisAgent(df, False)
 
-    while True:
+    while (
+        True
+    ):  # could be a running loop for queries with loading spinner - error handling done in agent itself
         prompt = input("Please enter your query below? \n\n")
         response = agent.query(prompt)
         print(f"> {response}\n")
