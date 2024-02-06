@@ -84,6 +84,8 @@ class InterfaceAgent:
             Eg: user_input: Increase temperature? response: What percentage would you like to change average_temperature by? Please indicate both feature and change percentage.
             Eg: user_input: Decrease price by 2? response: Price is not a feature you can modify, please pick an appropriate feature.
 
+            If the user gives a feature outside the list, ensure that you look within the feature list to see if any feature is appropriate to use. If you can't find any, then return an error asking the user for a feature within the list.
+
             If a user is trying to modify multiple features indicate to them what is wrong with their request. If the user request isn't related to modifying features, return an error (status = 2) saying that I can only help with queries relating to changes in the forecast.
             \n{format_instructions}\n{user_input}
 
@@ -107,7 +109,6 @@ class InterfaceAgent:
                 {"features": ", ".join(self.features), "user_input": user_input}
             )
             assert isinstance(response_obj, dict)
-            print(response_obj)
             return response_obj
 
         except Exception as e:
