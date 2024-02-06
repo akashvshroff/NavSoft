@@ -71,6 +71,7 @@ class DataframeAnalysisAgent(object):
             template="""You are a helpful data analyst that will solve the provided user request using the dataframe appropriately.
 
             It is important that you answer accurately. If you do not understand the question, or cannot answer it, be clear and ask for clarifications. Remember that you should only answer questions about the dataframe. 
+            Your job is to help the user, so even if their question is incorrectly phrased, make assumptions about what they might have intended and answer those. However, state your assumptions clearly in your response.
             
             If a user request pertains to something apart from the dataframe, reply saying that the query is out of your domain. \n{format_instructions}\n{query}
             
