@@ -27,7 +27,7 @@ class Analysis(BaseModel):
 
 
 class DataframeAnalysisAgent(object):
-    def __new__(cls, df, gpt4=True):
+    def __new__(cls, df=None, gpt4=True):
         """
         DataframeAnalysisAgent is a singleton class so that we can avoid recreating agents
         Use load_new_df to make any changes to the df and agent
@@ -38,8 +38,9 @@ class DataframeAnalysisAgent(object):
             cls.instance.gpt4 = gpt4
         return cls.instance
 
-    def __init__(self, df, gpt4=True):
-        self.df = df
+    def __init__(self, df=None, gpt4=True):
+        if df is not None:
+            self.df = df
         self.model = "gpt-4-0125-preview" if gpt4 else "gpt-3.5-turbo-1106"
         self.agent = self.create_agent(0.1)
         self.parser = JsonOutputParser(pydantic_object=Analysis)
