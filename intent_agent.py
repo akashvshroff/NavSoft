@@ -58,7 +58,7 @@ class IntentAgent:
         )
         self.chain = prompt | self.model | self.parser
 
-    def query(self, user_input, df=None):
+    def query(self, user_input, params={}):
         """
         Recognizes user intent and calls on the appropriate agent to handle the query.
         """
@@ -73,10 +73,15 @@ class IntentAgent:
                     "response": "Sorry, I can only help you with queries relating to forecasting or analysis of data.",
                 }
 
-            elif intent == "forecast ":
-                agent = InterfaceAgent(self.gpt4)
+            elif intent == "forecast":
+                features = params.get("features", None)
+                if features is None:
+                    agent = InterfaceAgent(self.gpt4)
+                else:  # for a set of features apart from the default hardcoded list
+                    agent = InterfaceAgent(self.gpt4, features)
 
             elif intent == "analysis":
+                df = params.get("df", None)
                 agent = DataframeAnalysisAgent(df, self.gpt4)
                 if (
                     df is not None
@@ -89,7 +94,6 @@ class IntentAgent:
                 }
 
             agent_response_obj = agent.query(user_input)
-            print(agent_response_obj)
             agent_response_obj["intent"] = intent
             return agent_response_obj
 

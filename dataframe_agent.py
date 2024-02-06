@@ -34,16 +34,13 @@ class DataframeAnalysisAgent(object):
         """
         if not hasattr(cls, "instance"):
             cls.instance = super(DataframeAnalysisAgent, cls).__new__(cls)
-            cls.instance.df = df
-            cls.instance.gpt4 = gpt4
         return cls.instance
 
     def __init__(self, df=None, gpt4=True):
-        if df is not None:
-            self.df = df
         self.model = "gpt-4-0125-preview" if gpt4 else "gpt-3.5-turbo-1106"
-        self.agent = self.create_agent(0.1)
         self.parser = JsonOutputParser(pydantic_object=Analysis)
+        if df is not None:
+            self.load_new_df(df)
 
     def create_agent(self, temp=0.1):
         """
@@ -61,8 +58,9 @@ class DataframeAnalysisAgent(object):
         """
         Function to add new dataframe and update agent
         """
-        self.df = df
-        self.agent = self.create_agent(0.1)
+        if not hasattr(self, "df") or not self.df.equals(df):
+            self.df = df
+            self.agent = self.create_agent(0.1)
 
     def query(self, user_prompt):
         """
