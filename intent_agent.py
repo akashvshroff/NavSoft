@@ -83,10 +83,6 @@ class IntentAgent:
             elif intent == "analysis":
                 df = params.get("df", None)
                 agent = DataframeAnalysisAgent(df, self.gpt4)
-                if (
-                    df is not None
-                ):  # load in new df - need to do it when a forecast is done
-                    agent.load_new_df(df)
             else:
                 return {
                     "status": 2,
