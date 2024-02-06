@@ -1,8 +1,6 @@
 import os, logging
-import pandas as pd
 import secret
-import json
-from typing import List
+from datetime import datetime
 
 # langchain imports
 from langchain.agents.agent_types import AgentType
@@ -15,7 +13,7 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 
 os.environ["OPENAI_API_KEY"] = secret.OPENAI_KEY
 logging.basicConfig(
-    filename="df_agent_errors.txt", encoding="utf-8", level=logging.WARNING
+    filename="agent_errors.txt", encoding="utf-8", level=logging.WARNING
 )
 
 
@@ -93,7 +91,7 @@ class DataframeAnalysisAgent(object):
             return response_obj
 
         except Exception as e:
-            logging.error(str(e))
+            logging.error(f"{datetime.now()} Dataframe Agent Error: {str(e)}")
             return {
                 "status": 2,
                 "response": "An unknown error occurred. Please try again later.",

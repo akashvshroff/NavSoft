@@ -1,5 +1,6 @@
 import os, logging
 import secret
+from datetime import datetime
 
 # langchain imports
 from langchain_openai import ChatOpenAI
@@ -10,7 +11,7 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 os.environ["OPENAI_API_KEY"] = secret.OPENAI_KEY
 
 logging.basicConfig(
-    filename="llm_interface_errors.txt", encoding="utf-8", level=logging.WARNING
+    filename="agent_errors.txt", encoding="utf-8", level=logging.WARNING
 )
 
 
@@ -94,7 +95,7 @@ class InterfaceAgent:
             return response_obj
 
         except Exception as e:
-            logging.error(str(e))
+            logging.error(f"{datetime.now()} Interface Agent Error: {str(e)}")
             return {
                 "status": 2,
                 "response": "An unknown error occured. Please try again later.",
