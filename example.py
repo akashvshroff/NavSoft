@@ -14,7 +14,7 @@ def driver():
         False, "./data/all_data.csv"
     )  # initial df needs to be read client side
     agent = IntentAgent()
-    params = {"df": original_df}  # optional params
+    params = {"df": original_df}  # params - df and features
     while (
         True
     ):  # could be a running loop for queries with loading spinner - error handling done in agent itself
