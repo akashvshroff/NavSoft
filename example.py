@@ -10,7 +10,9 @@ def read_data(is_parquet, filename="./data/BaseTable_v1.parquet"):
 
 
 def driver():
-    original_df = read_data(True)  # initial df needs to be read client side
+    original_df = read_data(
+        False, "./data/all_data.csv"
+    )  # initial df needs to be read client side
     agent = IntentAgent()
     params = {"df": original_df}  # optional params
     while (
@@ -32,6 +34,13 @@ def driver():
         In case of intent==forecast, use the feature and change value to make new prediction and then update the df passed in params to query
         so that the user has the new df for analysis
         """
+
+        # if response["intent"] == "forecast":
+        #     feature = response["feature"]
+        #     change = response["change"]
+        #     df = model.make_prediction({feature: change})
+        #     params["df"] = df  # update parameters for analysis
+        #     # or break after new query
 
         print(f"> {response}\n")
         print("-" * 25)
