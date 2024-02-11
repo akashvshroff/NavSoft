@@ -3,3 +3,5 @@ __pycache__/
 secret.py
 *.txt
 test.py
+example.ipynb
+output.md
