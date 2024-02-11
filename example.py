@@ -1,5 +1,6 @@
 import pandas as pd
 from intent_agent import IntentAgent
+from IPython.display import display, Markdown
 
 
 def read_data(is_parquet, filename="./data/BaseTable_v1.parquet"):

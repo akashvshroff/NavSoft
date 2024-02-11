@@ -42,7 +42,7 @@ class IntentAgent:
             template="""You are a helpful data scientist who is trying to understand user intent. Based on a given user input, you have to determine whether the
             user is trying to run analysis on a dataframe, generate a forecast or neither. If they are trying to do neither, you must simply return error.
 
-            Eg: user_input: Increase inflation by 5 percent? intent: forecast
+            Eg: user_input: Increase inflation by 5%? intent: forecast
             Eg: user_input: What are the top selling items? intent: analysis
             Eg: user_input: How can I write mergesort? intent: error
             Eg: user_input: What happens if I increase average temperature? intent: forecast

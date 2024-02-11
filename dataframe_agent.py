@@ -22,7 +22,7 @@ class Analysis(BaseModel):
         description="status code for query, 0 for success, 1 for clarification, 2 for out of domain questions."
     )
     response: str = Field(
-        description="string output for query, either analysis, clarification question or error message"
+        description="markdown string output for query, either analysis, clarification question or error message"
     )
 
 
@@ -74,6 +74,8 @@ class DataframeAnalysisAgent(object):
             Your job is to help the user, so even if their question is incorrectly phrased, make assumptions about what they might have intended and answer those. However, state your assumptions clearly in your response.
             
             If a user request pertains to something apart from the dataframe, reply saying that the query is out of your domain. \n{format_instructions}\n{query}
+
+            Your response must be a string in markdown format. If the user requires some data in the form of a table or a list, make sure you leverage the markdown tools for formatting data in that manner.                          
             
             In all cases, make sure you adhere to the given output format instructions. If you need more information from users, return status = 1. If the question is out of domain, return status = 2.""",
             input_variables=["query"],

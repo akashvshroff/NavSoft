@@ -78,10 +78,10 @@ class InterfaceAgent:
             well as the percentage change (as a float, positive indicating increase and negative indicating decrease). Remember the feature can only be a value from the above list, if the user indicates a feature outside the list, pick the most appropriate one from the list itself.
             If the user has not specified these two parameters, you need to ask them to indicate both the feature and the percent change.
 
-            Eg: user_input: Increase inflation by 5 percent? response: feature = inflation, change = +5.0
+            Eg: user_input: Increase inflation by 5%? response: feature = inflation, change = +5.0
+            Eg: user_input: Increase temperature by 10? response: feature = temperature, change=+10.0
             Eg: user_input: Decrease by 5 percent? response: What feature do you want to change? Please indicate both feature and change percentage.
             Eg: user_input: Decrease discount by 2? response: feature = discount_percentage, change = -2.0
-            Eg: user_input: Increase temperature? response: What percentage would you like to change average_temperature by? Please indicate both feature and change percentage.
             Eg: user_input: Decrease price by 2? response: Price is not a feature you can modify, please pick an appropriate feature.
 
             If the user gives a feature outside the list, ensure that you look within the feature list to see if any feature is appropriate to use. If you can't find any, then return an error asking the user for a feature within the list.
