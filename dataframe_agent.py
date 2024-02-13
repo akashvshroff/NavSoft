@@ -79,17 +79,18 @@ class DataframeAnalysisAgent(object):
             Eg: user_input: What is the inventory turnover rate for high-margin products? approach: Calculate inventory turnover by comparing units sold to average inventory levels for high-margin items.
             Eg: user_input: What is the week-over-week growth in sales for new products? approach: Ask the user for clarification about what new means and ask them to re-enter their query. 
             Eg: user_input: How do unit sales correlate with the level of discount offered? approach: Perform regression analysis to understand the correlation between discount levels and unit sales.
-            Eg: user_input: What is the sales volume for products that have been sold for less than 3 months? approach: Identify appropriate products and then rank in descending order based on volume.
             
-            If a user request pertains to something apart from the dataframe, reply saying that the query is out of your domain. \n{format_instructions}\n{query}
+            If a user request pertains to something apart from the dataframe, reply saying that the query is out of your domain.
+            
+            \n{format_instructions}\n{query}
 
+            Your response field must be a string in markdown format. If the user requires some data in the form of a table or a list, make sure you leverage the markdown tools for formatting data in that manner.   
+                                   
             Make sure that you provide intermediate results in the response that you provide. Don't provide code or possible steps but rather results from intermediate steps that you have completed. The user should be confident
             that your working is correct. 
 
-            Your response must be a string in markdown format. If the user requires some data in the form of a table or a list, make sure you leverage the markdown tools for formatting data in that manner.                          
-            
-            In all cases, make sure you adhere to the given output format instructions. If you need more information from users, return status = 1. If the question is out of domain, return status = 2.
-            If you do not understand what the user is asking or cannot answer it clearly, make sure you return status = 1 and in your response explain what clarification you need.""",
+            If you do not understand what the user is asking or cannot answer it clearly, make sure you return status = 1 and in your response explain what clarification you need.
+            In all cases, make sure you adhere to the given output format instructions. If you need more information from users, return status = 1. If the question is out of domain, return status = 2.""",
             input_variables=["query"],
             partial_variables={
                 "format_instructions": self.parser.get_format_instructions()
