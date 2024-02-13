@@ -47,6 +47,7 @@ class IntentAgent:
             Eg: user_input: How can I write mergesort? intent: error
             Eg: user_input: What happens if I increase average temperature? intent: forecast
             Eg: user_input: Write me a new df? intent: error
+            Eg: user_input: What is the dataframe about? intent: analysis
 
             If you are unsure about what the user is trying to do, pick the most appropriate option. If their statement does not relate to analysis or forecast, mark it as an error.
             \n{format_instructions}\n{user_input}

@@ -72,12 +72,24 @@ class DataframeAnalysisAgent(object):
 
             It is important that you answer accurately. If you do not understand the question, or cannot answer it, be clear and ask for clarifications. Remember that you should only answer questions about the dataframe. 
             Your job is to help the user, so even if their question is incorrectly phrased, make assumptions about what they might have intended and answer those. However, state your assumptions clearly in your response.
+
+            Here are some example user inputs, and a potential approach you could use to solving the problem:
+            Eg: user_input: What products have the highest sales volume? approach: Sort products by units sold in descending order and find top sellers.
+            Eg: user_input: Which products yield highest profit margin? approach: Calculate the margin for each product and rank them to identify the ones with the highest margins.
+            Eg: user_input: What is the inventory turnover rate for high-margin products? approach: Calculate inventory turnover by comparing units sold to average inventory levels for high-margin items.
+            Eg: user_input: What is the week-over-week growth in sales for new products? approach: Ask the user for clarification about what new means and ask them to re-enter their query. 
+            Eg: user_input: How do unit sales correlate with the level of discount offered? approach: Perform regression analysis to understand the correlation between discount levels and unit sales.
+            Eg: user_input: What is the sales volume for products that have been sold for less than 3 months? approach: Identify appropriate products and then rank in descending order based on volume.
             
             If a user request pertains to something apart from the dataframe, reply saying that the query is out of your domain. \n{format_instructions}\n{query}
 
+            Make sure that you provide intermediate results in the response that you provide. Don't provide code or possible steps but rather results from intermediate steps that you have completed. The user should be confident
+            that your working is correct. 
+
             Your response must be a string in markdown format. If the user requires some data in the form of a table or a list, make sure you leverage the markdown tools for formatting data in that manner.                          
             
-            In all cases, make sure you adhere to the given output format instructions. If you need more information from users, return status = 1. If the question is out of domain, return status = 2.""",
+            In all cases, make sure you adhere to the given output format instructions. If you need more information from users, return status = 1. If the question is out of domain, return status = 2.
+            If you do not understand what the user is asking or cannot answer it clearly, make sure you return status = 1 and in your response explain what clarification you need.""",
             input_variables=["query"],
             partial_variables={
                 "format_instructions": self.parser.get_format_instructions()
