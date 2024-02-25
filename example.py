@@ -47,7 +47,8 @@ def driver():
         # if response["intent"] == "simulation"
         # run the model 5 times changing response["feature"] (by default only "discount_percentage") from 0 to 5
 
-        # for both forecast and simulation, pass the results to the LLM to analyze using function
+        # for both forecast and simulation, pass the results to the LLM to analyze using the function agent.analyze_results
+        # you will need to pass it both the original user_input and the resultant dataframe.
 
         print(f"> {response}\n")
         print("-" * 25)
