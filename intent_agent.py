@@ -21,7 +21,7 @@ logging.basicConfig(
 
 class Intent(BaseModel):
     intent: str = Field(
-        "the task that the user is trying to accomplish, forecast, analysis or error."
+        "the task that the user is trying to accomplish, forecast, analysis, simulation or error."
     )
 
 
@@ -40,14 +40,20 @@ class IntentAgent:
     def create_chain(self):
         prompt = PromptTemplate(
             template="""You are a helpful data scientist who is trying to understand user intent. Based on a given user input, you have to determine whether the
-            user is trying to run analysis on a dataframe, generate a forecast or neither. If they are trying to do neither, you must simply return error.
+            user is trying to run analysis on a dataframe, generate a simple forecast, trigger a complex simulation or none. If they are trying to do neither, you must simply return error.
+
+            intent: analysis, means that the user is trying to run analytical queries on the dataframe or learn specific results from the dataframe.
+            intent: forecast, means that the user is trying to change parameters and rerun the forecast 
+            intent: simulation, means that the user is trying to schedule multiple forecasts to determine the optimum value for some parameter
 
             Eg: user_input: Increase inflation by 5%? intent: forecast
             Eg: user_input: What are the top selling items? intent: analysis
             Eg: user_input: How can I write mergesort? intent: error
+            Eg: user_input: What is the best discount value to maximize revenue? intent: simulation
             Eg: user_input: What happens if I increase average temperature? intent: forecast
             Eg: user_input: Write me a new df? intent: error
             Eg: user_input: What is the dataframe about? intent: analysis
+            Eg: user_input: What is the optimum discount for the highest sales? intent: simulation
 
             If you are unsure about what the user is trying to do, pick the most appropriate option. If their statement does not relate to analysis or forecast, mark it as an error.
             \n{format_instructions}\n{user_input}
@@ -84,6 +90,12 @@ class IntentAgent:
             elif intent == "analysis":
                 df = params.get("df", None)
                 agent = DataframeAnalysisAgent(df, self.gpt4)
+            elif intent == "simulation":
+                return {
+                    "status": 0,
+                    "intent": "simulation",
+                    "feature": "discount_percentage",  # default simulation feature for now
+                }
             else:
                 return {
                     "status": 2,

@@ -3,7 +3,7 @@ from intent_agent import IntentAgent
 from IPython.display import display, Markdown
 
 
-def read_data(is_parquet, filename="./data/BaseTable_v1.parquet"):
+def read_data(is_parquet, filename="./data/all_data.csv"):
     if is_parquet:
         return pd.read_parquet(filename)
     else:
@@ -14,6 +14,7 @@ def driver():
     original_df = read_data(
         False, "./data/all_data.csv"
     )  # initial df needs to be read client side
+    original_df = original_df[original_df["data_type"] == "forModel"]
     agent = IntentAgent()
     params = {"df": original_df}  # params - df and features
     while (
