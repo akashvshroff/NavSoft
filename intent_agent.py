@@ -76,7 +76,11 @@ class IntentAgent:
             """
             return agent.query(prompt)
         except Exception as e:
-            pass
+            logging.error(f"{datetime.now()} Intent Agent Error: {str(e)}")
+            return {
+                "status": 2,
+                "response": "An unknown error occured. Please try again later.",
+            }
 
     def query(self, user_input, params={}):
         """
