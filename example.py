@@ -28,7 +28,7 @@ def driver():
         {
             status: 0 for success, 1 for clarification, 2 for error (could maybe give a colour indication for error), 
             response: to be printed for the user, either result of analysis, loading message for forecast or error message, 
-            intent: forecast, analysis or simulation, in case no error - outlines what the user wants to do
+            intent: forecast, analysis, simulation, conversation in case no error - outlines what the user wants to do
             feature: parameter that the user wants to edit in case of forecast
             change: float value indicating percent change that user wants to make (+ve for increase, -ve for decrease)
         }
