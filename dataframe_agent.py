@@ -87,7 +87,7 @@ class DataframeAnalysisAgent(object):
 
             You must strictly adhere to the given format with the JSON object of response and status.
             Your response field must be a string in markdown format. If the user requires some data in the form of a table or a list, make sure you leverage the markdown tools for formatting data in that manner. 
-            If you use latex in your markdown response string, use double backslashes to avoid any JSON encoding errors. 
+            If you use latex for any equations in your markdown response string, use double backslashes to avoid any JSON encoding errors. Make sure that you adhere to this. 
                                    
             Make sure that you provide intermediate results in the response that you provide. Don't provide code or possible steps but rather results from intermediate steps that you have completed. The user should be confident
             that your working is correct. 
