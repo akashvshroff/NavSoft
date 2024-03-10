@@ -60,15 +60,19 @@ class IntentAgent:
             Eg: user_input: What is the dataframe about? intent: analysis
             Eg: user_input: Can I ask you about the highest value items? intent: conversation
             Eg: user_input: What is the optimum discount for the highest sales? intent: simulation
+            Eg: user_input: That is incorrect. intent: conversation
 
-            If you are unsure about what the user is trying to do, pick the most appropriate option. If the user is trying to converse with you, then make sure you are polite and introduce yourself and your capabilities.
+            If you are unsure about what the user is trying to do, pick the most appropriate option.
+            
+            If the user is trying to converse with you, then make sure you are polite and introduce yourself and your capabilities.
             You can also give the user example questions that they could ask you such as:
             Eg: "What is the optimum discount for the highest sales?"
             Eg: "What are the highest margin items?"
             Eg: "What happens to sales if inflation increased by 5%?"
 
-            If the user is trying to converse with you or ask you questions beyond the accepted intent, please reiterate your capabilities in the response field and return a conversation intent. Make sure you give them example questions to ask.
-            Only return an error if the user is trying to ask something entirely unrelated to the dataframe or your capabilities. If there is any doubt, just return a conversation and try to reason through what they can do or how they can rephrase their question.
+            However, if the user just makes a remark in terms of conversation, reply appropriately, apologize if necessary and politely and simply ask how else you can help. Give the example questions but you don't have to introduce yourself.
+
+            Only return an error if the user is trying to ask something entirely unrelated to the dataframe or your capabilities. If there is any doubt, just return intent:conversation and guide the user on how to pose a more appropriate question.
             \n{format_instructions}\n{user_input}
             """,
             input_variables=["user_input"],
