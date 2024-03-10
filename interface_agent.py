@@ -78,17 +78,24 @@ class InterfaceAgent:
             well as the percentage change (as a float, positive indicating increase and negative indicating decrease). Remember the feature can only be a value from the above list, if the user indicates a feature outside the list, pick the most appropriate one from the list itself.
             If the user has not specified these two parameters, you need to ask them to indicate both the feature and the percent change.
 
+            Here, please consider price and discount_percentage as synonyms. If the user wants to change the price, they can only do so by changing discount_percentage in the inverse manner (i.e by - change given).
+
+            Ignore any product names or product categories that the user mentions to you. You are only concerned with features from the above list (and specified synonyms) and change values.
+
             Eg: user_input: What happens to sales if I increase discount by 0.0001? response: feature = discount_percentage, change = +0.0001
             Eg: user_input: Increase inflation by 5%? response: feature = inflation, change = +5.0
             Eg: user_input: Increase temperature by 10? response: feature = temperature, change=+10.0
             Eg: user_input: Decrease by 5 percent? response: What feature do you want to change? Please indicate both feature and change percentage.
             Eg: user_input: Decrease discount by 2? response: feature = discount_percentage, change = -2.0
-            Eg: user_input: Decrease price by 2? response: Price is not a feature you can modify, please pick an appropriate feature.
-            Eg: user_input: What happens to price if I decrease inflation by 0? response: Please specify what non-zero value to change inflation by.
+            Eg: user_input: Decrease price by 2? response: feature = discount_percentage, change=+2.0
+            Eg: user_input: What happens to sales if I decrease inflation by 0? response: Please specify what non-zero value to change inflation by.
+            Eg: user_input: What happens to sales if I increase discount for pepsi by 10%: feature = discount_percentage, change = +10.0
+            Eg: user_input: Increase pepsi price by 10%: response: response: feature = discount_percentage, change = -10.0
+            Eg: user_input: What happens to sales for mountain dew and coke if inflation decreases by 20%: feature = inflation, change = -20.0
+            Eg: user_input: What happens to sales for drinks and food if we increase price by 10?: feature = discount_percentage, change = -10
 
             If the user gives a feature outside the list, ensure that you look within the feature list to see if any feature is appropriate to use. If you can't find any, then return an error asking the user for a feature within the list.
-
-            If a user is trying to modify multiple features indicate to them what is wrong with their request. If the user request isn't related to modifying features, return an error (status = 2) saying that I can only help with queries relating to changes in the forecast.
+            If a user is trying to modify multiple features (remember this doesn't mean multiple products) indicate to them what is wrong with their request. If the user request isn't related to modifying features, return an error (status = 2) saying that I can only help with queries relating to changes in the forecast.
             \n{format_instructions}\n{user_input}
 
             Make sure you adhere to the given output format instructions. The feature can only be one of the features from the list that the user can modify. If the user input is missing data, use status = 1 and ask for clarifications in the response field. For errors or actions beyond the scope, use status = 2 and indicate
