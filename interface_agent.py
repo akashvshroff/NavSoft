@@ -90,16 +90,18 @@ class InterfaceAgent:
             Eg: user_input: Decrease price by 2? response: feature = discount_percentage, change=+2.0
             Eg: user_input: What happens to sales if I decrease inflation by 0? response: Please specify what non-zero value to change inflation by.
             Eg: user_input: What happens to sales if I increase discount for pepsi by 10%: feature = discount_percentage, change = +10.0
-            Eg: user_input: Increase pepsi price by 10%: response: response: feature = discount_percentage, change = -10.0
+            Eg: user_input: Increase pepsi price by 10 and generate plots. response: feature = discount_percentage, change = -10.0
             Eg: user_input: What happens to sales for mountain dew and coke if inflation decreases by 20%: feature = inflation, change = -20.0
-            Eg: user_input: What happens to sales for drinks and food if we increase price by 10?: feature = discount_percentage, change = -10
+            Eg: user_input: What happens to sales and revenue for drinks and food if we increase price by 10?: feature = discount_percentage, change = -10
+            Eg: user_input: What happens to sales if inflation increased? response: Please specify what value to change inflation by.
 
             If the user gives a feature outside the list, ensure that you look within the feature list to see if any feature is appropriate to use. If you can't find any, then return an error asking the user for a feature within the list.
             If a user is trying to modify multiple features (remember this doesn't mean multiple products) indicate to them what is wrong with their request. If the user request isn't related to modifying features, return an error (status = 2) saying that I can only help with queries relating to changes in the forecast.
             \n{format_instructions}\n{user_input}
 
-            Make sure you adhere to the given output format instructions. The feature can only be one of the features from the list that the user can modify. If the user input is missing data, use status = 1 and ask for clarifications in the response field. For errors or actions beyond the scope, use status = 2 and indicate
-            why in the response section. If the user input is valid, use the response field to indicate that their forecast will be generated shortly. Your responses must be polite and in complete sentences.
+            Make sure you adhere to the given output format instructions. The feature can only be one of the features from the list that the user can modify. If the user input is missing data, use status = 1 and ask for clarifications in the response field.
+            You must ignore any additional user request for analysis or to generate plots. Your role is to only infer features and change values.
+            If the user input is valid, use the response field to indicate that their forecast will be generated shortly. Your responses must be polite and in complete sentences.
             """,
             input_variables=["features", "user_input"],
             partial_variables={
