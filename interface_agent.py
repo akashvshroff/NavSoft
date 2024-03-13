@@ -34,7 +34,7 @@ class InterfaceAgent:
         gpt4=True,
         features=[
             "discount_percentage",
-            "gas_prices",
+            "gas_price",
             "consumer_price_index",
             "inflation",
             "average_temperature",
@@ -55,7 +55,7 @@ class InterfaceAgent:
         gpt4=True,
         features=[
             "discount_percentage",
-            "gas_prices",
+            "gas_price",
             "consumer_price_index",
             "inflation",
             "average_temperature",
