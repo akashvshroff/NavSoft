@@ -1,4 +1,4 @@
-import os, logging
+import os, logging, traceback
 import secret
 from datetime import datetime
 
@@ -6,8 +6,12 @@ from datetime import datetime
 from interface_agent import InterfaceAgent
 from dataframe_agent import DataframeAnalysisAgent
 
+# variables
+import prompt_variables
+
 # langchain imports
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAI
+from langchain.memory import ConversationSummaryBufferMemory
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.pydantic_v1 import BaseModel, Field
@@ -21,18 +25,16 @@ logging.basicConfig(
 
 class Intent(BaseModel):
     intent: str = Field(
-        "the task that the user is trying to accomplish, forecast, analysis, simulation, conversation or error."
+        "the task that the user is trying to accomplish: forecast, analysis, simulation, conversation or error."
     )
     response: str = Field("response in case the user is trying to converse or an error")
 
 
 class IntentAgent:
-    def __init__(self, gpt4=True):
+    def __init__(self, model_name="gpt-3.5-turbo"):
         """
         Creates llm agent to recognize user intent and forward to respective agent.
         """
-        self.gpt4 = gpt4
-        model_name = "gpt-4-0125-preview" if gpt4 else "gpt-3.5-turbo-1106"
         self.model = ChatOpenAI(model=model_name, temperature=0.1)
         self.parser = JsonOutputParser(pydantic_object=Intent)
         self.chain = None
@@ -40,29 +42,16 @@ class IntentAgent:
 
     def create_chain(self):
         prompt = PromptTemplate(
-            template="""You are NavAI, a helpful data science chatbot created by NavSoft. Your role is to help users run analytical queries, generate forecasts and simulations to find optimal parameters for their businesses.
+            template="""
+            You are NavAI, a helpful data science chatbot created by NavSoft. Your role is to help users run analytical queries, generate forecasts and complex simulations to find optimal parameters for their businesses.
             
-            Given a user input, you need to determine whether the
-            user is trying to run analysis on a dataframe, generate a simple forecast, trigger a complex simulation or none. 
+            Given a user input, you need to determine user intent based on the following options:
+            {intent_options}
 
-            intent: analysis, means that the user is trying to run analytical queries on the dataframe or learn specific results from the dataframe.
-            intent: forecast, means that the user is trying to change parameters and rerun the forecast 
-            intent: simulation, means that the user is trying to schedule multiple forecasts to determine the optimum value for some parameter
-            intent: conversation, means that the user is trying to converse or is unsure about capabilities
+            Here are some examples for user input and the appropriate intent:
+            {intent_few_shot}
 
-            Eg: user_input: Increase inflation by 5%? intent: forecast
-            Eg: user_input: What are the top selling items? intent: analysis
-            Eg: user_input: How can I write mergesort? intent: error
-            Eg: user_input: What can you do? intent: conversation
-            Eg: user_input: What is the best discount value to maximize revenue? intent: simulation
-            Eg: user_input: What happens if I increase average temperature? intent: forecast
-            Eg: user_input: Write me a new df? intent: error
-            Eg: user_input: What is the dataframe about? intent: analysis
-            Eg: user_input: Can I ask you about the highest value items? intent: conversation
-            Eg: user_input: What is the optimum discount for the highest sales? intent: simulation
-            Eg: user_input: That is incorrect. intent: conversation
-
-            If you are unsure about what the user is trying to do, pick the most appropriate option.
+            If you are unsure about what the user is trying to do, mark intent:conversation and ask an appropriate clarifying question to the user as a response
             
             If the user is trying to converse with you, then make sure you are polite and introduce yourself and your capabilities.
             You can also give the user example questions that they could ask you such as:
@@ -72,12 +61,22 @@ class IntentAgent:
 
             However, if the user just makes a remark in terms of conversation, reply appropriately, apologize if necessary and politely and simply ask how else you can help. Give the example questions but you don't have to introduce yourself.
 
-            Only return an error if the user is trying to ask something entirely unrelated to the dataframe or your capabilities. If there is any doubt, just return intent:conversation and guide the user on how to pose a more appropriate question.
-            \n{format_instructions}\n{user_input}
+            Only return an error if the user is trying to ask something entirely unrelated to the dataframe or your capabilities. If there is any doubt, just return intent:conversation and ask clarifying questions to guide the user on how to pose a more appropriate question.
+
+            {format_instructions}
+
+            Make sure you strictly adhere to the format instructions provided above, and that you return an intent and response, nothing else. You must always return an intent and you must use the conversation history (provided below) to determine the intent.
+            
+            You must also use the conversation history (if any) to understand the user intent. The users are potentially responding to followups posed by you and so pay careful attention to the history and try to infer the intent from it if you cannot understand it explicitly.
+            {conversation_history}
+
+            {user_input}
             """,
-            input_variables=["user_input"],
+            input_variables=["user_input", "conversation_history"],
             partial_variables={
-                "format_instructions": self.parser.get_format_instructions()
+                "format_instructions": self.parser.get_format_instructions(),
+                "intent_options": prompt_variables.intent_options,
+                "intent_few_shot": prompt_variables.intent_few_shot,
             },
         )
         self.chain = prompt | self.model | self.parser
@@ -102,45 +101,105 @@ class IntentAgent:
                 "response": "An unknown error occured. Please try again later.",
             }
 
+    # def clarify(self, user_input, intent, params={}):
+    #     """
+    #     Response to a clarification posed by an agent identified by the intent
+    #     """
+    #     try:
+    #         if intent == "forecast":
+    #             agent = InterfaceAgent()
+    #         else:
+    #             self.query(user_input, params)
+    #         agent_response_obj = agent.query(
+    #             user_input,
+    #             conversation_history=params.get("conversation_history", None),
+    #         )
+    #         agent_response_obj["intent"] = intent
+    #         return agent_response_obj
+
+    #     except Exception as e:
+    #         logging.error(f"{datetime.now()} Intent Agent Error: {str(e)}")
+    #         return {
+    #             "status": 2,
+    #             "response": "An unknown error occured. Please try again later.",
+    #         }
+
     def query(self, user_input, params={}):
         """
         Recognizes user intent and calls on the appropriate agent to handle the query.
         """
         try:
-            response_obj = self.chain.invoke({"user_input": user_input})
+            conversation_history_list = params.get("conversation_history", [])
+            df = params.get("df", None)
+            conversation_history = "No conversation history available."
+            if len(conversation_history_list):
+                memory = ConversationSummaryBufferMemory(
+                    llm=OpenAI(),
+                    max_token_limit=256,
+                )
+                for chat_obj in conversation_history_list:
+                    memory.save_context(
+                        {"input": chat_obj["user_input"]},
+                        {"output": chat_obj["response"]},
+                    )
+                conversation_history = memory.load_memory_variables({})
+                conversation_history = conversation_history["history"]
+            # print(f"summary conversation history: {conversation_history}")
+            response_obj = self.chain.invoke(
+                {"user_input": user_input, "conversation_history": conversation_history}
+            )
             assert isinstance(response_obj, dict)
+            # print(response_obj)
             intent = response_obj["intent"]
-            agent = None
             if intent == "conversation":
-                return {"status": 0, "response": response_obj["response"]}
-            elif intent == "forecast":
-                features = params.get("features", None)
-                if features is None:
-                    agent = InterfaceAgent(self.gpt4)
-                else:  # for a set of features apart from the default hardcoded list
-                    agent = InterfaceAgent(self.gpt4, features)
-
-            elif intent == "analysis":
-                df = params.get("df", None)
-                agent = DataframeAnalysisAgent(df, self.gpt4)
-            elif intent == "simulation":
                 return {
                     "status": 0,
-                    "intent": "simulation",
-                    "feature": "discount_percentage",  # default simulation feature for now
+                    "intent": "conversation",
+                    "response": response_obj["response"],
                 }
+            elif intent == "forecast":
+                agent = InterfaceAgent()
+            elif intent == "analysis":
+                agent = DataframeAnalysisAgent(df=df)
             else:
-                return {
-                    "status": 2,
-                    "response": "I'm sorry, I can only answer questions related to dataframe analytics and forecasting.",
-                }
-
-            agent_response_obj = agent.query(user_input)
+                return response_obj
+            agent_response_obj = agent.query(
+                user_input, conversation_history=conversation_history
+            )
             agent_response_obj["intent"] = intent
             return agent_response_obj
+            # if intent == "conversation":
+            #     return {"status": 0, "response": response_obj["response"]}
+            # elif intent == "forecast":
+            #     features = params.get("features", None)
+            #     if features is None:
+            #         agent = InterfaceAgent(self.gpt4)
+            #     else:  # for a set of features apart from the default hardcoded list
+            #         agent = InterfaceAgent(self.gpt4, features)
+
+            # elif intent == "analysis":
+            #     df = params.get("df", None)
+            #     agent = DataframeAnalysisAgent(df, self.gpt4)
+            # elif intent == "simulation":
+            #     return {
+            #         "status": 0,
+            #         "intent": "simulation",
+            #         "feature": "discount_percentage",  # default simulation feature for now
+            #     }
+            # else:
+            #     return {
+            #         "status": 2,
+            #         "response": "I'm sorry, I can only answer questions related to dataframe analytics and forecasting.",
+            #     }
+
+            # agent_response_obj = agent.query(user_input)
+            # agent_response_obj["intent"] = intent
+            # return agent_response_obj
 
         except Exception as e:
             logging.error(f"{datetime.now()} Intent Agent Error: {str(e)}")
+            print(response_obj)
+            print(traceback.format_exc())
             return {
                 "status": 2,
                 "response": "An unknown error occured. Please try again later.",

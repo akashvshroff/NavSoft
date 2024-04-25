@@ -2,11 +2,15 @@ import os, logging
 import secret
 from datetime import datetime
 
+# variables
+import prompt_variables
+
 # langchain imports
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAI
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain.memory import ConversationSummaryBufferMemory
 
 os.environ["OPENAI_API_KEY"] = secret.OPENAI_KEY
 
@@ -25,99 +29,67 @@ class Forecast(BaseModel):
     change: float = Field(
         description="percentage amount that the feature should change by"
     )
-    response: str = Field(description="response for user depending on status")
+    response: str = Field(description="response message for user")
 
 
 class InterfaceAgent:
-    def __new__(
-        cls,
-        gpt4=True,
-        features=[
-            "discount_percentage",
-            "gas_price",
-            "consumer_price_index",
-            "inflation",
-            "average_temperature",
-            "average_snow",
-        ],
-    ):
-        """
-        Interface Agent is a singleton class so that we don't need to reload the parser and model chain.
-        """
-        if not hasattr(cls, "instance"):
-            cls.instance = super(InterfaceAgent, cls).__new__(cls)
-            cls.instance.gpt4 = gpt4
-            cls.instance.features = features
-        return cls.instance
-
-    def __init__(
-        self,
-        gpt4=True,
-        features=[
-            "discount_percentage",
-            "gas_price",
-            "consumer_price_index",
-            "inflation",
-            "average_temperature",
-            "average_snow",
-        ],
-    ):
-        model_name = "gpt-4-0125-preview" if gpt4 else "gpt-3.5-turbo-1106"
+    def __init__(self, model_name="gpt-4-turbo"):
         self.model = ChatOpenAI(model=model_name, temperature=0.1)
         self.parser = JsonOutputParser(pydantic_object=Forecast)
         self.chain = None
-        self.features = features
         self.create_chain()
 
     def create_chain(self):
         prompt = PromptTemplate(
             template="""
-            You are a helpful data scientist that is helping understand some provided user request. The user is trying to instruct the system on what parameters of a forecast to modify. You are going to help the system understand what parameters can be modified.
+            You are a data scientist chatbot whose role is to understand a user request.
+            The user is instructing the system on what parameters of a forecast to modify. Your role is to identify the values of these parameters.
 
-            Here is a list of features that the user can modify: {features}. The user must also specify a percent increase or decrease in value for the feature. Given a user string, you need to identify the most appropriate feature from the given list that they are trying to modify as
-            well as the percentage change (as a float, positive indicating increase and negative indicating decrease). Remember the feature can only be a value from the above list, if the user indicates a feature outside the list, pick the most appropriate one from the list itself.
-            If the user has not specified these two parameters, you need to ask them to indicate both the feature and the percent change.
+            Here is a list of features that the user can modify:
+            {features}. 
+            
+            Given a user string, you need to identify the most appropriate feature from the given list that they are trying to modify as well as the percentage change (as a float, positive indicating increase and negative indicating decrease).
 
-            Here, please consider price and discount_percentage as synonyms. If the user wants to change the price, they can only do so by changing discount_percentage in the inverse manner (i.e by - change given).
+            Here are some examples for user_input and appropriate outputs.
 
-            Ignore any product names or product categories that the user mentions to you. You are only concerned with features from the above list (and specified synonyms) and change values.
+            {forecast_few_shot}
+            
+            {forecast_instructions}
 
-            Eg: user_input: What happens to sales if I increase discount by 0.0001? response: feature = discount_percentage, change = +0.0001
-            Eg: user_input: Increase inflation by 5%? response: feature = inflation, change = +5.0
-            Eg: user_input: Increase temperature by 10? response: feature = temperature, change=+10.0
-            Eg: user_input: Decrease by 5 percent? response: What feature do you want to change? Please indicate both feature and change percentage.
-            Eg: user_input: Decrease discount by 2? response: feature = discount_percentage, change = -2.0
-            Eg: user_input: Decrease price by 2? response: feature = discount_percentage, change=+2.0
-            Eg: user_input: What happens to sales if I decrease inflation by 0? response: Please specify what non-zero value to change inflation by.
-            Eg: user_input: What happens to sales if I increase discount for pepsi by 10%: feature = discount_percentage, change = +10.0
-            Eg: user_input: Increase pepsi price by 10 and generate plots. response: feature = discount_percentage, change = -10.0
-            Eg: user_input: What happens to sales for mountain dew and coke if inflation decreases by 20%: feature = inflation, change = -20.0
-            Eg: user_input: What happens to sales and revenue for drinks and food if we increase price by 10?: feature = discount_percentage, change = -10
-            Eg: user_input: What happens to sales if inflation increased? response: Please specify what value to change inflation by.
+            Remember the feature can only be a value from the above list, if the user indicates a feature outside the list, either pick the most appropriate one or clarify by giving them the available options.
+            If the user has not specified these two parameters, you need to clarify and ask them to indicate both the feature and the percent change.
+            
+            You may need to help the user set up a forecast itself. If the user input doesn't contain information about feature and change (they are missing both parameters), respond with a clarification (status = 1). You need to respond informing users of available features they can modify (from above) and encouraging them to provide the necessary parameters. Be helpful and polite.
+            If the user is missing only one parameter, acknowledge the parameter that they have passed (only if they have explicitly passed one), note it (by populating either feature or change) and respond with a clarification (status = 1), and information about the parameter they are missing and ask them how they want to proceed.
+            You must ignore any additional user request for analysis or to generate plots. Your role is to only help users generate forecasts, and to infer features and change values.
+            If the user input is valid, use the response field to indicate that their forecast will be generated shortly. Your responses must be helpful, polite and in complete sentences.
 
-            If the user gives a feature outside the list, ensure that you look within the feature list to see if any feature is appropriate to use. If you can't find any, then return an error asking the user for a feature within the list.
-            If a user is trying to modify multiple features (remember this doesn't mean multiple products) indicate to them what is wrong with their request. If the user request isn't related to modifying features, return an error (status = 2) saying that I can only help with queries relating to changes in the forecast.
-            \n{format_instructions}\n{user_input}
+            Make sure you adhere to the given output format instructions. 
+            {format_instructions}
 
-            Make sure you adhere to the given output format instructions. The feature can only be one of the features from the list that the user can modify. If the user input is missing data, use status = 1 and ask for clarifications in the response field.
-            You must ignore any additional user request for analysis or to generate plots. Your role is to only infer features and change values.
-            If the user input is valid, use the response field to indicate that their forecast will be generated shortly. Your responses must be polite and in complete sentences.
+            You must also use the chat history (if any) to understand the user request in case they are clarifying any previous questions. Make sure to pay close attention to their responses and use that to fill in information about the feature and change. If you can determine both of these, then the request is successful (status = 0). You must adhere to the above formatting instructions strictly.
+            {conversation_history}
+            {user_input}
             """,
-            input_variables=["features", "user_input"],
+            input_variables=["user_input", "conversation_history"],
             partial_variables={
-                "format_instructions": self.parser.get_format_instructions()
+                "format_instructions": self.parser.get_format_instructions(),
+                "features": prompt_variables.interface_drinks_features,
+                "forecast_few_shot": prompt_variables.interface_drinks_few_shot,
+                "forecast_instructions": prompt_variables.interface_drinks_instructions,
             },
         )
         self.chain = prompt | self.model | self.parser
 
-    def query(self, user_input):
+    def query(self, user_input, conversation_history):
         """
         Parses user input to extract relevant forecasting information
         """
 
         try:
+
             response_obj = self.chain.invoke(
-                {"features": ", ".join(self.features), "user_input": user_input}
+                {"user_input": user_input, "conversation_history": conversation_history}
             )
             assert isinstance(response_obj, dict)
             return response_obj

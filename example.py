@@ -16,41 +16,34 @@ def driver():
     )  # initial df needs to be read client side
     original_df = original_df[original_df["data_type"] == "forModel"]
     agent = IntentAgent()
-    params = {"df": original_df}  # params - df and features
-    while (
-        True
-    ):  # could be a running loop for queries with loading spinner - error handling done in agent itself
+    conversation_history = []  # keep appending while the clarification loop is on
+    last_intent = ""
+    while True:
         prompt = input("Q: ")
+        params = {"df": original_df, "conversation_history": conversation_history}
         response = agent.query(prompt, params)
 
-        """
-        Response object has the following structure:
-        {
-            status: 0 for success, 1 for clarification, 2 for error (could maybe give a colour indication for error), 
-            response: to be printed for the user, either result of analysis, loading message for forecast or error message, 
-            intent: forecast, analysis, simulation, conversation in case no error - outlines what the user wants to do
-            feature: parameter that the user wants to edit in case of forecast
-            change: float value indicating percent change that user wants to make (+ve for increase, -ve for decrease)
-        }
+        # changes made to parameters
+        if response["status"] != 1:  # if no clarification then reset memory
+            conversation_history = []
+            last_intent = ""
+        else:
+            if "intent" in response and response["intent"] == last_intent:
+                conversation_history.append(
+                    {"user_input": prompt, "response": response["response"]}
+                )
+            else:
+                conversation_history = [
+                    {"user_input": prompt, "response": response["response"]}
+                ]
+                last_intent = response.get("intent", "")
 
-        In case of intent==forecast, use the feature and change value to make new prediction and then update the df passed in params to query
-        so that the user has the new df for analysis
-        """
-
-        # if response["intent"] == "forecast":
-        #     feature = response["feature"]
-        #     change = response["change"]
-        #     df = model.make_prediction({feature: change})
-        #     params["df"] = df  # update parameters for analysis
-        #     # or break after new query
-
-        # if response["intent"] == "simulation"
-        # run the model 5 times changing response["feature"] (by default only "discount_percentage") from 0 to 5
-
-        # for both forecast and simulation, pass the results to the LLM to analyze using the function agent.analyze_results
-        # you will need to pass it both the original user_input and the resultant dataframe.
+            # actions based on response
 
         print(f"> {response}\n")
+        print("-" * 25)
+        print(conversation_history)
+        print(f"last intent: {last_intent}")
         print("-" * 25)
         print("")
 
