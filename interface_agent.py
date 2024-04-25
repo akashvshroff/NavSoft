@@ -6,11 +6,10 @@ from datetime import datetime
 import prompt_variables
 
 # langchain imports
-from langchain_openai import ChatOpenAI, OpenAI
+from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.pydantic_v1 import BaseModel, Field
-from langchain.memory import ConversationSummaryBufferMemory
 
 os.environ["OPENAI_API_KEY"] = secret.OPENAI_KEY
 

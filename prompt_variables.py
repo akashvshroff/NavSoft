@@ -63,3 +63,15 @@ user_input: What is the week-over-week growth in sales for new products? approac
 user_input: How do unit sales correlate with the level of discount offered? approach: Perform regression analysis to understand the correlation between discount levels and unit sales.
 user_input: What is the return on investment (ROI) for each product? approach: combine margin data with investment costs for each product to compute ROI and return in the response, don't consider the product categories themselves, only specific products.
 """
+
+# SimulationAgent
+
+simulation_drinks_features = """[
+    "discount_percentage",
+]"""
+
+simulation_drinks_few_shot = """
+user_input: What is the optimal discount for my sales? feature: discount_percentage
+user_input: What is the optimal? response: Please specify what feature to run the simulation for.
+user_input: What is the best value for discount? feature: discount_percentage
+"""
